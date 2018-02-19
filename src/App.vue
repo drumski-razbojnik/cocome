@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <h1>Test</h1>
+    <top-menu></top-menu>
     <router-view></router-view>
   </div>
 </template>
@@ -17,7 +17,5 @@ export default {
 </script>
 
 <style lang="scss">
-body{
-  background-color:#fff;
-}
+@import "static/style";
 </style>
