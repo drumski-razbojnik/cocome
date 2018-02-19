@@ -1,1 +1,11 @@
-$primary-color: #ada8b6;
+@import url('https://fonts.googleapis.com/css?family=Princess+Sofia|Open+Sans');
+
+
+*{
+   box-sizing: border-box;
+}
+body{
+   font-family: 'Open Sans', sans-serif;
+   font-size:12px;
+   margin:0;
+}
