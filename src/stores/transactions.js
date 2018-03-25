@@ -149,7 +149,7 @@ export default {
          },
          {
             id: 4,
-            payee: 'hrvoje.fadiga',
+            payee: 'roberta.fadiga',
             date: new Date('2017-01-07'),
             description: 'Pivkani',
             totalCost: 139.40,
@@ -161,7 +161,32 @@ export default {
                debtor: 'igor.fadiga',
                settlementCost: 68.73,
             }]
-         }];
+         },
+         {
+            id: 5,
+            payee: 'hrvoje.fadiga',
+            date: new Date('2018-03-20'),
+            description: 'Hlače (online)',
+            totalCost: 150.40,
+            currency: 'EUR',
+            settlements: [{
+               debtor: 'igor.fadiga',
+               settlementCost: 150.40,
+            }]
+         },
+         {
+            id: 6,
+            payee: 'hrvoje.fadiga',
+            date: new Date('2018-03-27'),
+            description: 'Podloga za miša',
+            totalCost: 11.99,
+            currency: 'EUR',
+            settlements: [{
+               debtor: 'tin.fadiga',
+               settlementCost: 11.99,
+            }]
+         }
+         ];
       },
       TOGGLE_TRANSACTIONGROUP(state, id) {
          var transactionGroup = state.transactions.transactionGroups.find(tg => tg.id == id);
