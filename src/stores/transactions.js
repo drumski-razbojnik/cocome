@@ -189,7 +189,8 @@ export default {
          ];
       },
       TOGGLE_TRANSACTIONGROUP(state, id) {
-         var transactionGroup = state.transactions.transactionGroups.find(tg => tg.id == id);
+         console.log(id)
+         var transactionGroup = state.transactionGroups.find(tg => tg.id == id);
          transactionGroup.expanded = !transactionGroup.expanded;
       },
       SET_TRANSACTION_GROUPS(state, selectedTransactionGroups) {
