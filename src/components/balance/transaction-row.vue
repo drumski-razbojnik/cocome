@@ -1,31 +1,87 @@
 <template>
-  <div class="transaction" :class="{
-                    'transaction--odd' : true
-                    }">
-    <div class="transaction__column transaction__column--date">
-      23.2.
-    </div>
-    <div class="transaction__column transaction__column--title">
-      3 x Zeolit (Amazon)
-    </div>
-    <div class="transaction__column transaction__column--amount">
-      <span class="transaction__column__value transaction__column--amount__value">
-        {{ (Math.random() * Math.random() * 100).toFixed(2)}}€
-      </span>
-    </div>
-    <div class="transaction__column transaction__column--difference">
-      <span class="transaction__column__value transaction__column--difference__value transaction__column--difference__value--debtor">
-        -{{ (Math.random() * Math.random() * 100).toFixed(2)}}€
-      </span>
-    </div>
-  </div>
+  <div class="transaction" :class="{ 'transaction--odd' : true, 'transaction--expanded': isExpanded }">
+    <div class="transaction__overview">
+      <div class="transaction__overview__column transaction__overview__column--date">
+        {{localDate}}
+      </div>
+      <div class="transaction__overview__column transaction__overview__column--title">
+        {{transaction.description}}
+      </div>
+      <div class="transaction__overview__column transaction__overview__column--amount">
+        <span class="transaction__overview__column__value transaction__overview__column--amount__value">
+          {{ transaction.totalCost.toFixed(2) }}€
+        </span>
+      </div>
+      <div class="transaction__overview__column transaction__overview__column--difference">
+        <span v-if="(isCurrentUserPayee && !transactionSettled && transactionBalance > 0)" class="transaction__overview__column__value 
+          transaction__overview__column--difference__value 
+          transaction__overview__column--difference__value--creditor">
+          {{ transactionBalance.toFixed(2) }}€
+        </span>
 
+        <span v-else-if="(!isCurrentUserPayee && !transactionSettled&& transactionBalance > 0)" class="transaction__overview__column__value 
+        transaction__overview__column--difference__value
+        transaction__overview__column--difference__value--debtor">
+          {{ transactionBalance.toFixed(2) }}€
+        </span>
+
+        <span v-else class="transaction__overview__column__value 
+        transaction__overview__column--difference__value">
+          {{ transaction.totalCost }}€
+        </span>
+      </div>
+    </div>
+
+    <div class="transaction__details">
+
+      <transaction-row-details v-for="ts in transaction.settlements" :key="ts.debtor" :settlement="ts"></transaction-row-details>
+    </div>
+
+  </div>
 </template>
 
 <script>
+import { mapGetters } from "vuex";
 export default {
+  props: {
+    isExpanded: {
+      type: Boolean,
+      required: false,
+      default: true
+    },
+    transaction: {
+      required: true
+    }
+  },
   data() {
-    return {};
+    return {
+      localDate: this.transaction.date.toLocaleDateString("hr-HR")
+    };
+  },
+  computed: {
+    isCurrentUserPayee() {
+      if (this.$store.state.currentUser === this.transaction.payee) {
+        return true;
+      }
+      return false;
+    },
+    transactionBalance() {
+      if (this.isCurrentUserPayee) {
+        return this.$store.getters["transactions/transactionBalanceTotalDebt"](
+          this.transaction.id
+        );
+      } else {
+        return this.$store.getters["transactions/transactionBalanceUserDebt"]({
+          idTransaction: this.transaction.id,
+          debtor: this.$store.state.currentUser
+        });
+      }
+    },
+    transactionSettled() {
+      return this.$store.getters["transactions/transactionSettled"](
+        this.transaction.id
+      );
+    }
   }
 };
 </script>
@@ -33,13 +89,9 @@ export default {
 
 <style lang="scss">
 .transaction {
-  display: flex;
-  flex-direction: flex;
-  flex-wrap: nowrap;
-  justify-content: flex-start;
-
+  height: 0;
   margin-top: -1px;
-  padding: 10px 10px;
+  padding: 10px 15px;
   position: relative;
 
   background-color: #fdfffc;
@@ -51,6 +103,10 @@ export default {
     cursor: pointer;
   }
 
+  &--expanded {
+    height: auto;
+  }
+
   &--odd {
     background-color: #f7f4f3;
 
@@ -58,43 +114,56 @@ export default {
     }
   }
 
-  &__column {
-    font-size: 0.8rem;
-    align-items: center;
-    position: relative;
+  &__details {
+  }
 
-    margin: 0 10px;
+  &__overview {
+    display: flex;
+    flex-direction: flex;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
 
-    &--date {
-      flex-basis: 10%;
-    }
+    padding-bottom: 10px;
 
-    &--title {
-      flex-grow: 3;
-    }
+    &__column {
+      font-size: 0.8rem;
+      align-items: center;
+      position: relative;
 
-    &--amount {
-      flex-basis: 10%;
+      // margin: 0 10px;
+      padding: 0 15px;
 
-      text-align: center;
-
-      &__value {
-        font-weight: bold;
+      &--date {
+        flex-basis: 10%;
       }
-    }
 
-    &--difference {
-      flex-basis: 10%;
-      text-align: center;
+      &--title {
+        flex-grow: 3;
+      }
 
-      &__value {
-        font-weight: bold;
-        &--creditor {
-          color: #04724d;
+      &--amount {
+        flex-basis: 10%;
+
+        text-align: center;
+
+        &__value {
+          font-weight: bold;
         }
+      }
 
-        &--debtor {
-          color: #e65f5c;
+      &--difference {
+        flex-basis: 10%;
+        text-align: center;
+
+        &__value {
+          font-weight: bold;
+          &--creditor {
+            color: #04724d;
+          }
+
+          &--debtor {
+            color: #e65f5c;
+          }
         }
       }
     }
