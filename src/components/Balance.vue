@@ -3,7 +3,7 @@
     <friends-menu></friends-menu>
 
     <article class="balance__transactions">
-      <transactions></transactions>
+      <transaction-group v-for="tg in transactionGroups" :key="tg.id" :transactionGroup="tg"></transaction-group>
     </article>
 
     <friend-menu></friend-menu>
@@ -15,10 +15,17 @@ import friendMenu from "./balance/menu-friend";
 import friendsMenu from "./balance/menu-friends";
 
 export default {
-  computed: {},
+  computed: {
+    transactionGroups() {
+      return this.$store.state.transactions.transactionGroups;
+    }
+  },
   components: {
     "friends-menu": friendsMenu,
     "friend-menu": friendMenu
+  },
+  created() {  
+    this.$store.dispatch("transactions/getTransactions");
   }
 };
 </script>
