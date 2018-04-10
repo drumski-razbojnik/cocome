@@ -1,48 +1,38 @@
 <template>
-   <aside class="balance__aside">
-      <nav class="balance__aside__nav">
-         <h2 class="balance__aside__nav__title">Obitelj</h2>
-         <ul class="balance__aside__nav__menu">
-            <li class="balance__aside__nav__menu__item">
-               <a class="balance__aside__nav__menu__item__link" href="#">Robi</a>
-            </li>
-            <li class="balance__aside__nav__menu__item">
-               <a class="balance__aside__nav__menu__item__link" href="#">Tin</a>
-            </li>
-            <li class="balance__aside__nav__menu__item">
-               <a class="balance__aside__nav__menu__item__link" href="#">Mama</a>
-            </li>
-            <li class="balance__aside__nav__menu__item">
-               <a class="balance__aside__nav__menu__item__link" href="#">Tata</a>
-            </li>
-         </ul>
-      </nav>
-
-      <nav class="balance__aside__nav">
-         <h2 class="balance__aside__nav__title">Prijatelji</h2>
-         <ul class="balance__aside__nav__menu">
-            <li class="balance__aside__nav__menu__item">
-               <a class="balance__aside__nav__menu__item__link" href="#">Rick</a>
-            </li>
-            <li class="balance__aside__nav__menu__item">
-               <a class="balance__aside__nav__menu__item__link" href="#">Patrick</a>
-            </li>
-         </ul>
-      </nav>
-
-      <nav class="balance__aside__nav">
-         <h2 class="balance__aside__nav__title">Cigani</h2>
-         <ul class="balance__aside__nav__menu">
-            <li class="balance__aside__nav__menu__item">
-               <a class="balance__aside__nav__menu__item__link" href="#">Hamdija I.</a>
-            </li>
-         </ul>
-      </nav>
-   </aside>
+  <aside class="balance__aside">
+    <nav class="balance__aside__nav">
+      <h2 class="balance__aside__nav__title">Stakeholders</h2>
+      <ul class="balance__aside__nav__menu">
+        <li class="balance__aside__nav__menu__item" v-for="stakeholder in stakeholders" :key="stakeholder">
+          <a class="balance__aside__nav__menu__item__link" href="#" @click="displayStakeholderBalance(stakeholder)">{{stakeholder}}</a>
+        </li>
+      </ul>
+    </nav>
+  </aside>
 </template>
 
 <script>
-export default {};
+export default {
+  data() {
+    return {};
+  },
+  computed: {
+    stakeholders() {
+      return this.$store.getters["transactions/stakeholders"];
+    }
+  },
+  methods: {
+    displayStakeholderBalance(stakeholder) {
+      var filter = {
+        type: "user",
+        order: "asc",
+        searchParameter: stakeholder
+      };
+
+      this.$store.dispatch("transactions/setTransactionGroups", filter);
+    }
+  }
+};
 </script>
 
 <style lang="scss">
