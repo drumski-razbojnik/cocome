@@ -6,31 +6,6 @@ export default {
       lastUpdate: null,
    },
    getters: {
-      finalBalance: (state) => {
-         var totalBalance = 0;
-
-      },
-      transactionsByUser: (state, getters) => (username) => {
-         var filteredTransactions = getters.transactionsByMonth.filter(transactionGroup => {
-
-            let transactions = transactionGroup.transactions.map(transaction => {
-               let settlements = transaction.settlements.map(settlement => {
-                  if (settlement.debtor === username) {
-                     return settlement;
-                  }
-               }).filter(settlement => settlement !== undefined);
-
-               if ((settlements.length > 0) || (transaction.payee === username)) {
-                  return transaction;
-               }
-
-            }).filter(transaction => transaction !== undefined);
-
-            return (transactions.length > 0);
-         });
-
-         return filteredTransactions;
-      },
       transactionsByMonth: (state) => {
          //Finding the minimum and maximum year
          var years = state.transactions.map(t => {
@@ -59,7 +34,7 @@ export default {
                //Add group only if there are transactions within that month
                if (monthTransactions.length > 0) {
                   var monthGroup = {
-                     id: m.toString() + y.toString(),
+                     id: parseInt(y.toString() + m.toString()),
                      name: m + '. mjesec ' + y,
                      expanded: true,
                      transactions: monthTransactions
@@ -67,12 +42,64 @@ export default {
                   monthGroups.push(monthGroup);
 
                   //Sorting the array by date descending
-                  monthGroups.reverse();
+                  console.log(monthGroups)
+                  monthGroups.sort((a, b) => a - b);
                }
             }
          }
 
          return monthGroups;
+      },
+      transactionsByUser: (state, getters) => (username) => {
+         var filteredTransactions = getters.transactionsByMonth.filter(transactionGroup => {
+
+            let transactions = transactionGroup.transactions.map(transaction => {
+               let settlements = transaction.settlements.map(settlement => {
+                  if (settlement.debtor === username) {
+                     return settlement;
+                  }
+               }).filter(settlement => settlement !== undefined);
+
+               if ((settlements.length > 0) || (transaction.payee === username)) {
+                  return transaction;
+               }
+
+            }).filter(transaction => transaction !== undefined);
+
+            return (transactions.length > 0);
+         });
+
+         return filteredTransactions;
+      },
+      transactionSettled: (state, getters) => (idTransaction) => {
+         if (getters.transactionBalanceTotalDebt(idTransaction) > 0) {
+            return false;
+         }
+
+         return true;
+      },
+      transactionBalanceTotalDebt: (state) => (idTransaction) => {
+         let transactionBalance = 0;
+
+         let transaction = state.transactions.find(transaction => transaction.id == idTransaction);
+         let totalSettlementsBalance = transaction.settlements
+            .map(settlement => settlement.paid)
+            .reduce((prev, curr) => {
+               return prev + curr;
+            });
+
+         return (transaction.totalCost - totalSettlementsBalance);
+      },
+      transactionBalanceUserDebt: (state) => (transactionInfo) => {
+         let transaction = state.transactions.find(transaction => transaction.id == transactionInfo.idTransaction);
+         let debtorBalance = transaction.settlements
+            .filter(settlement => settlement.debtor == transactionInfo.debtor)
+            .map(settlement => {
+               return settlement.cost - settlement.paid;
+            })
+            .reduce((prev, curr) => prev + curr, 0);
+
+         return debtorBalance;
       },
       stakeholders: (state, getters) => {
          var transactionGroups = getters.transactionsByMonth;
@@ -102,19 +129,22 @@ export default {
             payee: 'lana.franic',
             date: new Date('2018-02-22'),
             description: 'Podloga za pečenje',
-            totalCost: 19.85,
+            totalCost: 59.55,
             currency: 'EUR',
             settlements: [{
                debtor: 'hrvoje.fadiga',
-               settlementCost: 19.85
+               cost: 19.85,
+               paid: 14
             },
             {
-               debtor: 'test.fadiga',
-               settlementCost: 19.85
+               debtor: 'igor.fadiga',
+               cost: 19.85,
+               paid: 13
             },
             {
-               debtor: 'test2.fadiga',
-               settlementCost: 19.85
+               debtor: 'tin.fadiga',
+               cost: 19.85,
+               paid: 19.85
             }]
          },
          {
@@ -126,10 +156,12 @@ export default {
             currency: 'HRK',
             settlements: [{
                debtor: 'roberta.fadiga',
-               settlementCost: 250,
+               cost: 250,
+               paid: 0
             }, {
                debtor: 'igor.fadiga',
-               settlementCost: 250,
+               cost: 250,
+               paid: 35
             }]
          },
          {
@@ -141,10 +173,12 @@ export default {
             currency: 'EUR',
             settlements: [{
                debtor: 'tin.fadiga',
-               settlementCost: 250,
+               cost: 250,
+               paid: 0
             }, {
                debtor: 'igor.fadiga',
-               settlementCost: 250,
+               cost: 250,
+               paid: 0
             }]
          },
          {
@@ -156,10 +190,12 @@ export default {
             currency: 'HRK',
             settlements: [{
                debtor: 'hrvoje.fadiga',
-               settlementCost: 68.73,
+               cost: 68.73,
+               paid: 14.7
             }, {
                debtor: 'igor.fadiga',
-               settlementCost: 68.73,
+               cost: 68.73,
+               paid: 13
             }]
          },
          {
@@ -171,7 +207,8 @@ export default {
             currency: 'EUR',
             settlements: [{
                debtor: 'igor.fadiga',
-               settlementCost: 150.40,
+               cost: 150.40,
+               paid: 0
             }]
          },
          {
@@ -183,13 +220,13 @@ export default {
             currency: 'EUR',
             settlements: [{
                debtor: 'tin.fadiga',
-               settlementCost: 11.99,
+               cost: 11.99,
+               paid: 0
             }]
          }
          ];
       },
       TOGGLE_TRANSACTIONGROUP(state, id) {
-         console.log(id)
          var transactionGroup = state.transactionGroups.find(tg => tg.id == id);
          transactionGroup.expanded = !transactionGroup.expanded;
       },
@@ -218,7 +255,17 @@ export default {
       },
       toggleTransactionGroup: (context, id) => {
          context.commit('TOGGLE_TRANSACTIONGROUP', id);
-      }
+      },
+      getTransactionBalance: (context, idTransaction) => {
+         let transaction = context.state.transactions.find(t => t.id == idTransaction);
+         let totalSettlementsBalance = transaction.settlements
+            .map(settlement => settlement.paid)
+            .reduce((prev, curr) => {
+               return prev + curr;
+            });
+
+         return (transaction.totalCost - totalSettlementsBalance);
+      },
    }
 }
 
