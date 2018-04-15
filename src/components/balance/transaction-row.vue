@@ -1,5 +1,5 @@
 <template>
-  <div class="transaction" :class="{ 'transaction--odd' : true, 'transaction--expanded': isExpanded }">
+  <div class="transaction" :class="{ 'transaction--expanded': isExpanded }">
     <div class="transaction__overview">
       <div class="transaction__overview__column transaction__overview__column--date">
         {{localDate}}
@@ -107,11 +107,8 @@ export default {
     height: auto;
   }
 
-  &--odd {
+  &:nth-child(2n + 1) {
     background-color: #f7f4f3;
-
-    &:hover {
-    }
   }
 
   &__details {
